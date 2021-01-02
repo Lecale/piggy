@@ -67,7 +67,8 @@ for sg in sgf:
 #echo instructions
 echo "instruction count:" , $instructions.len()
 # --lagbuffer
-var pig = startProcess(command = "Leela0110GTP.exe", args = ["--gtp","--noponder",pOuts], options ={poStdErrToStdOut})
+#var pig = startProcess(command = "Leela0110GTP.exe", args = ["--gtp","--noponder",pOuts], options ={poStdErrToStdOut})
+var pig = startProcess(command = "Leela0110GTP.exe", args = ["--gtp","--noponder",pOuts])
 var iStream = inputStream(pig)
 var oStream = outputStream(pig)
 # var eStream = errorStream(pig) # might we ever need this ?
@@ -105,37 +106,37 @@ for inst in instructions:
         echo "there is nothing to read"
         sleep(bedtime) # avoid blocking
       else:
-        echo oStream.isNil()
-        gtp = oStream.readLine()
-        if gtp != "":
-          robot = gtp.split({' '})
-          echo robot
-          if tHaltCondition == 1:
-            if robot[0] == "=":
-              tWaiter = 1000
-              sleep(bedtime)
-          if tHaltCondition == 2:
-            if robot[0] == "=":
-              var tWinrate:float = parseFloat(robot[1])
-              if blackTurn == false:
-                tWinrate = 1 - tWinrate
-              if tWinrate > 0:
+        if not isNil(oStream):
+          gtp = oStream.readLine()
+          if gtp != "":
+            robot = gtp.split({' '})
+            echo robot
+            if tHaltCondition == 1:
+              if robot[0] == "=":
                 tWaiter = 1000
                 sleep(bedtime)
-                #echo makeComment($tWinrate , tSuggestions)
-                agf[agf.len-1] = agf[agf.len-1] & makeComment($tWinrate , tSuggestions)
-          if tHaltCondition == 3:
-          # [2] == -> then it is a move suggestion and we need at least 1 of those in theory
-            if robot.len > 2:
-              if robot[2] == "->":
-                tSuggestions.add(robot[1])
-              if robot[0] == "MC":
-                secondComment = " " & robot[3]
-            if robot[0] == "=":
-              tWaiter = 1000
-              sleep(bedtime)
-              #echo makeComment("" , tSuggestions)
-              agf[agf.len-1] = agf[agf.len-1] & makeComment(secondComment , tSuggestions)
+            if tHaltCondition == 2:
+              if robot[0] == "=":
+                var tWinrate:float = parseFloat(robot[1])
+                if blackTurn == false:
+                  tWinrate = 1 - tWinrate
+                if tWinrate > 0:
+                  tWaiter = 1000
+                  sleep(bedtime)
+                  #echo makeComment($tWinrate , tSuggestions)
+                  agf[agf.len-1] = agf[agf.len-1] & makeComment($tWinrate , tSuggestions)
+            if tHaltCondition == 3:
+            # [2] == -> then it is a move suggestion and we need at least 1 of those in theory
+              if robot.len > 2:
+                if robot[2] == "->":
+                  tSuggestions.add(robot[1])
+                if robot[0] == "MC":
+                  secondComment = " " & robot[3]
+              if robot[0] == "=":
+                tWaiter = 1000
+                sleep(bedtime)
+                #echo makeComment("" , tSuggestions)
+                agf[agf.len-1] = agf[agf.len-1] & makeComment(secondComment , tSuggestions)
     except:
       let e = getCurrentException()
       let msg = getCurrentExceptionMsg()
